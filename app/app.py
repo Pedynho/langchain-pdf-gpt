@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import streamlit as st
+import tiktoken
 from PyPDF2 import PdfReader
 from langchain import PromptTemplate
 from langchain.text_splitter import CharacterTextSplitter
@@ -27,21 +28,27 @@ def main():
         
       # split into chunks
       text_splitter = CharacterTextSplitter(
-        separator="\n",
+        separator=".",
         chunk_size=2000,
-        chunk_overlap=200,
+        chunk_overlap=0,
         length_function=len
       )
       chunks = text_splitter.split_text(text)
+
+      encoding = tiktoken.encoding_for_model('gpt-3.5-turbo-16k')
+      value = chunks[0] + chunks[1] + chunks[2] + chunks[3]
+      print(value)
+      print(len(encoding.encode(value)))
+
       # create embeddings
       model_name = "text-embedding-ada-002"
       embeddings = OpenAIEmbeddings(model=model_name)
       try:
         knowledge_base = FAISS.load_local("PDFVectorBase", embeddings)
       except RuntimeError as e:
-        st.write('Não tá tendo não')
+        st.write('Num tá tendo não')
       
-      st.write('continua depois do try')
+      # st.write('continua depois do try')
       # knowledge_base = FAISS.from_texts(chunks, embeddings)
       # knowledge_base.save_local('PDFVectorBase')
       # print(knowledge_base)
