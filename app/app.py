@@ -39,10 +39,10 @@ def main():
       model_name = "text-embedding-ada-002"
       embeddings = OpenAIEmbeddings(model=model_name)
       try:
-        knowledge_base = FAISS.load_local("PDFVectorBase", embeddings)
+        knowledge_base = FAISS.load_local("empreendedorismo", embeddings)
       except RuntimeError as e:
         knowledge_base = FAISS.from_texts(chunks, embeddings)
-        knowledge_base.save_local('PDFVectorBase')
+        knowledge_base.save_local('empreendedorismo')
 
       # show user input
       question = st.text_input("Ask a question about your PDF:")
@@ -62,24 +62,26 @@ def main():
           ---------------------
           com base no conteúdo acima construa um texto dissertativo-argumentativo respondendo a seguinte pergunta: {question}
           siga a seguinte estrutura: introdução, desenvolvimento, conclusão 
-          adicione alguns do seguintes termos: Empírico, Demonstração, Iluminismo, Novo mundo, Antropologia, Ciência, Cultura, Alteridade, Método indutivo, Século XVIII, Fatos sociais, Selvagem, Civilizado, Religião, Filosofia.
+          adicione os seguintes termos: {termos}
         """
+
+        termos = '"Empreendedorismo", "Inovação", " Gestão", "Modelo de Negócio", "Mercado", "Microempresa", "Conceitos", "Espírito Empreendedor", "História"'
         prompt = PromptTemplate(
-          input_variables=['context', 'question'],
+          input_variables=['context', 'question', 'termos'],
           template=template
         )
 
         #  medidindo tamnho do input em tokens
-        llminput = prompt.format(context=context, question=question)
+        llminput = prompt.format(context=context, question=question, termos=termos)
         encoding = tiktoken.encoding_for_model('gpt-3.5-turbo-16k')
         print(len(encoding.encode(llminput)))
         
         # # enviado pompt para o LLM
-        llm = OpenAI(model_name="gpt-3.5-turbo-16k")
+        llm = OpenAI(model_name="gpt-3.5-turbo-16k", temperature=0.5)
         chain = LLMChain(llm=llm, prompt=prompt)
 
         with get_openai_callback() as cb:
-          response = chain.run(context=context, question=question)
+          response = chain.run(context=context, question=question, termos=termos)
           print(cb)
        
         st.write(response)
